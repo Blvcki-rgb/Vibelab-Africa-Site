@@ -1,0 +1,15 @@
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import * as schema from "./schema";
+
+function createDb() {
+  return drizzle(neon(process.env.DATABASE_URL!), { schema });
+}
+
+let _db: ReturnType<typeof createDb> | null = null;
+
+/** Connexion à la base Neon, créée à la première utilisation (sûr au moment du build). */
+export function getDb() {
+  if (!_db) _db = createDb();
+  return _db;
+}
