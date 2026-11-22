@@ -9,6 +9,51 @@ import { randomUUID } from "node:crypto";
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 
+/**
+ * Saisie masquée : on lit les touches une par une (mode brut du terminal),
+ * rien n'est affiché à part une « * » par caractère. Refuse si le terminal
+ * ne permet pas de masquer la saisie, plutôt que d'afficher le mot de passe.
+ */
+function askHidden(label: string): Promise<string> {
+  if (!stdin.isTTY || typeof stdin.setRawMode !== "function") {
+    return Promise.reject(
+      new Error("Ce terminal ne permet pas de masquer la saisie. Utilisez PowerShell ou Windows Terminal."),
+    );
+  }
+  return new Promise((resolve, reject) => {
+    let value = "";
+    stdout.write(label);
+    stdin.setRawMode(true);
+    stdin.resume();
+    stdin.setEncoding("utf8");
+    const done = (fn: () => void) => {
+      stdin.setRawMode(false);
+      stdin.pause();
+      stdin.removeListener("data", onData);
+      stdout.write("\n");
+      fn();
+    };
+    const onData = (chunk: string) => {
+      for (const ch of chunk) {
+        if (ch === "\r" || ch === "\n") return done(() => resolve(value));
+        if (ch === "\u0003") return done(() => reject(new Error("Annulé.")));
+        if (ch === "\u0008" || ch === "\u007f") {
+          if (value.length) {
+            value = value.slice(0, -1);
+            stdout.write("\b \b");
+          }
+          continue;
+        }
+        if (ch >= " ") {
+          value += ch;
+          stdout.write("*");
+        }
+      }
+    };
+    stdin.on("data", onData);
+  });
+}
+
 async function main() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL manquant (lancez via npm run admin:create).");
@@ -17,28 +62,14 @@ async function main() {
   const email = (process.env.ADMIN_EMAIL || (await rl.question("E-mail admin : "))).trim().toLowerCase();
   const name = (process.env.ADMIN_NAME || (await rl.question("Nom affiché : "))).trim() || "Admin";
 
-  // Saisie masquée : les caractères tapés ne s'affichent pas.
-  const askHidden = async (label: string) => {
-    stdout.write(label);
-    const out = rl as unknown as { _writeToOutput: (s: string) => void };
-    const original = out._writeToOutput;
-    out._writeToOutput = () => {};
-    const value = await rl.question("");
-    out._writeToOutput = original;
-    stdout.write("\n");
-    return value;
-  };
+  rl.close();
 
   let password = process.env.ADMIN_PASSWORD ?? "";
   if (!password) {
     password = await askHidden("Mot de passe (10 caractères min., la saisie est masquée) : ");
     const confirm = await askHidden("Confirmez le mot de passe : ");
-    if (password !== confirm) {
-      rl.close();
-      throw new Error("Les deux mots de passe ne correspondent pas. Relancez la commande.");
-    }
+    if (password !== confirm) throw new Error("Les deux mots de passe ne correspondent pas. Relancez la commande.");
   }
-  rl.close();
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("E-mail invalide.");
   if (password.length < 10) throw new Error("Mot de passe trop court (10 caractères minimum).");
