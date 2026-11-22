@@ -13,10 +13,31 @@ async function main() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL manquant (lancez via npm run admin:create).");
 
-  const rl = createInterface({ input: stdin, output: stdout });
+  const rl = createInterface({ input: stdin, output: stdout, terminal: true });
   const email = (process.env.ADMIN_EMAIL || (await rl.question("E-mail admin : "))).trim().toLowerCase();
   const name = (process.env.ADMIN_NAME || (await rl.question("Nom affiché : "))).trim() || "Admin";
-  const password = process.env.ADMIN_PASSWORD || (await rl.question("Mot de passe (10 caractères min.) : "));
+
+  // Saisie masquée : les caractères tapés ne s'affichent pas.
+  const askHidden = async (label: string) => {
+    stdout.write(label);
+    const out = rl as unknown as { _writeToOutput: (s: string) => void };
+    const original = out._writeToOutput;
+    out._writeToOutput = () => {};
+    const value = await rl.question("");
+    out._writeToOutput = original;
+    stdout.write("\n");
+    return value;
+  };
+
+  let password = process.env.ADMIN_PASSWORD ?? "";
+  if (!password) {
+    password = await askHidden("Mot de passe (10 caractères min., la saisie est masquée) : ");
+    const confirm = await askHidden("Confirmez le mot de passe : ");
+    if (password !== confirm) {
+      rl.close();
+      throw new Error("Les deux mots de passe ne correspondent pas. Relancez la commande.");
+    }
+  }
   rl.close();
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("E-mail invalide.");
