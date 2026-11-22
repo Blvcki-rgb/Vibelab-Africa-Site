@@ -84,7 +84,7 @@ export const DEFAULTS: ContentBlocks = {
     nom: "[Prénom Nom]",
     parcours: "[À REMPLACER : votre parcours en quelques lignes, ce qui vous a amené au vibe coding.]",
     pourquoi: "[À REMPLACER : pourquoi vous avez créé VibeLab Africa et pour qui.]",
-    photo: "",
+    photo: "/a-propos/fondateur.jpg",
   },
   legal: {
     formeJuridique: "[À REMPLACER]",
