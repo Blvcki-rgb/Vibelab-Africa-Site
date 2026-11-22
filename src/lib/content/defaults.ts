@@ -70,9 +70,9 @@ export type ContentKey = keyof ContentBlocks;
 
 export const DEFAULTS: ContentBlocks = {
   contact: {
-    whatsappNumber: "",
+    whatsappNumber: "212684537916",
     whatsappMessage: "Bonjour VibeLab Africa, j'aimerais parler de mon projet.",
-    email: "",
+    email: "globaltradingafricasquad@gmail.com",
     instagram: "",
   },
   texts: {
