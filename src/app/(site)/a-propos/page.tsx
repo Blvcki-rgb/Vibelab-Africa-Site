@@ -78,9 +78,29 @@ export default async function AProposPage() {
           <h2 className="vl-h2-sub mt-3.5 mb-0">{about.nom}</h2>
           <p className="mt-3 mb-0 font-mono text-[13px] text-muted">Fondateur de VibeLab Africa</p>
         </div>
-        <div className="flex flex-col gap-[18px] text-lg leading-[1.65] text-muted">
-          {about.parcours && <p className="m-0 whitespace-pre-line">{about.parcours}</p>}
-          {about.pourquoi && <p className="m-0 whitespace-pre-line">{about.pourquoi}</p>}
+        <div className="flex flex-col gap-10">
+          {about.parcours && (
+            <div className="flex flex-col gap-3">
+              <h3 className="m-0 text-[22px] font-semibold tracking-[-0.01em] text-ivory">
+                <span aria-hidden="true" className="mr-2.5 font-mono text-sm text-saffron">
+                  01
+                </span>
+                Mon parcours
+              </h3>
+              <p className="m-0 text-lg leading-[1.65] whitespace-pre-line text-muted">{about.parcours}</p>
+            </div>
+          )}
+          {about.pourquoi && (
+            <div className="flex flex-col gap-3">
+              <h3 className="m-0 text-[22px] font-semibold tracking-[-0.01em] text-ivory">
+                <span aria-hidden="true" className="mr-2.5 font-mono text-sm text-saffron">
+                  02
+                </span>
+                Pourquoi VibeLab Africa
+              </h3>
+              <p className="m-0 text-lg leading-[1.65] whitespace-pre-line text-muted">{about.pourquoi}</p>
+            </div>
+          )}
         </div>
       </section>
 
